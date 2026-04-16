@@ -118,7 +118,7 @@ public class FireExtinguisherPinInputSystem : MonoBehaviour
             bool isFromNonGrabbingHand = IsInputFromNonGrabbingHand(context, true);
 
             if (isFromNonGrabbingHand)
-            {
+            {   
                 PullPin();
             }
         }

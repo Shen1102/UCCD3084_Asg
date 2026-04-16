@@ -6,14 +6,15 @@ TagManager:
   tags:
   - Water
   - Ground
+  - Fire
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Fire
   - Water
   - UI
-  - 
+  - Pin
   - 
   - 
   - 

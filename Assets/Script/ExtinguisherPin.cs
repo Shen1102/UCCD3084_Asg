@@ -18,7 +18,12 @@ public class ExtinguisherPin : MonoBehaviour
     public float unlockDistance = 0.1f;
     public bool isUnlocked = false;
 
+    [Header("Camera Alignment")]
+    public Transform playerCamera;
+    public float alignmentSpeed = 10f;
+
     private Rigidbody rb;
+    private Rigidbody nozzleRb; // Added specific reference for the nozzle
     private XRGrabInteractable grabInteractable;
 
     private void Start()
@@ -30,7 +35,11 @@ public class ExtinguisherPin : MonoBehaviour
 
         foreach (Rigidbody boneRB in hoseBones) { boneRB.isKinematic = true; }
 
-        if (hoseGrabInteractable != null) { hoseGrabInteractable.enabled = false; }
+        if (hoseGrabInteractable != null)
+        {
+            hoseGrabInteractable.enabled = false;
+            nozzleRb = hoseGrabInteractable.GetComponent<Rigidbody>();
+        }
 
         if (grabInteractable != null)
         {
@@ -45,7 +54,35 @@ public class ExtinguisherPin : MonoBehaviour
             float dist = Vector3.Distance(transform.position, lockedPosition.position);
             if (dist > unlockDistance) { UnlockPin(); }
         }
+
+        if (isUnlocked && hoseGrabInteractable.isSelected)
+        {
+            AlignNozzleToCamera();
+        }
     }
+
+    void AlignNozzleToCamera()
+{
+    if (playerCamera == null) playerCamera = Camera.main.transform;
+
+    // Get the Rigidbody of the nozzle (Bone.010)
+    Rigidbody nozzleRb = GetComponent<Rigidbody>();
+
+    if (hoseGrabInteractable.isSelected)
+    {
+        // 1. Temporarily disable physics so the script has full control
+        if (nozzleRb != null) nozzleRb.isKinematic = true;
+
+        // 2. Point it at the camera with the 90-degree fix
+        Quaternion targetRotation = Quaternion.LookRotation(playerCamera.forward) * Quaternion.Euler(90, 0, 0);
+        nozzleRb.transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * alignmentSpeed);
+    }
+    else
+    {
+        // 3. Re-enable physics when dropped so it flops naturally
+        if (nozzleRb != null) nozzleRb.isKinematic = false;
+    }
+}
 
     void UnlockPin()
     {

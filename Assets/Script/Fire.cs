@@ -26,7 +26,7 @@ public class Fire : MonoBehaviour
     public System.Action<Fire> OnFireExtinguished;
     public System.Action<Fire, float> OnIntensityChanged;
 
-    private void OnEnable()
+    private void OnEnable() 
     {
         StartCoroutine(RegisterActivationSafe());
     }
@@ -35,7 +35,14 @@ public class Fire : MonoBehaviour
     {
         yield return null;
         if (GameManager.Instance != null)
+        {
+            Debug.Log($"Registering {gameObject.name} with GameManager.");
             GameManager.Instance.RegisterActivatedFire(this);
+        }
+        else
+        {
+            Debug.LogError("GameManager.Instance is NULL! Fire cannot be recognized.");
+        }
     }
 
     private void Start()
@@ -91,6 +98,7 @@ public class Fire : MonoBehaviour
             fireLight.color = Color.Lerp(Color.red, originalLightColor, currentIntensity);
         }
     }
+
 
     // Public API
     public float GetCurrentIntensity() => currentIntensity;
