@@ -39,16 +39,24 @@ public class GameManager : MonoBehaviour
     private bool gameEnded = false;
     private bool manualOpen = false;
     private float pausedAt = 0f;
+    private float finalTimeTaken = 0f;
 
     private readonly HashSet<Fire> expectedFires = new HashSet<Fire>();
     private readonly HashSet<Fire> activatedFires = new HashSet<Fire>();
 
     void Awake()
     {
-        if (Instance == null) Instance = this;
-        else { Destroy(gameObject); return; }
-
-        Time.timeScale = 1f;
+        if (Instance == null)
+        {
+            Instance = this;
+            // Reset time only for the valid instance
+            Time.timeScale = 1f;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
 
     void OnEnable()
@@ -69,8 +77,10 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (!gameEnded && !manualOpen)
-            UpdateHUDTimer();
+        // If the game is ended, STOP doing anything in this function.
+        if (gameEnded || manualOpen) return;
+
+        UpdateHUDTimer();
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
@@ -206,7 +216,8 @@ public class GameManager : MonoBehaviour
     {
         if (hudTimerText == null) return;
 
-        float elapsed = Time.realtimeSinceStartup - startRealtime;
+        // Use finalTimeTaken if the game is over, otherwise calculate live time
+        float elapsed = gameEnded ? finalTimeTaken : (Time.realtimeSinceStartup - startRealtime);
         float remaining = Mathf.Max(0f, exitBonusTimeLimit - elapsed);
 
         hudTimerText.color = remaining > 0 ? Color.green : Color.red;
@@ -223,24 +234,34 @@ public class GameManager : MonoBehaviour
     }
 
     // ========== Win ==========
+
     public void PlayerExited()
     {
         if (gameEnded) return;
+
+        // 1. Capture the frozen time
+        finalTimeTaken = Time.realtimeSinceStartup - startRealtime;
+
+        // 2. Set the player flag but DON'T set gameEnded yet
         playerExited = true;
-        CheckWinCondition();
+
+        // 3. Trigger the Win sequence
+        WinGame();
     }
 
     private void CheckWinCondition()
     {
-        if (gameEnded) return;
+        // This function is now redundant if you call WinGame() directly, 
+        // but if you keep it, remove the "if (gameEnded) return" line.
         if (playerExited) WinGame();
     }
 
     private void WinGame()
     {
+        if (gameEnded) return;
         gameEnded = true;
 
-        float timeTaken = Time.realtimeSinceStartup - startRealtime;
+        float timeTaken = finalTimeTaken;
         int denom = Mathf.Max(activatedFires.Count, 1);
         float perFirePercent = 90f / denom;
         float percentFromFires = extinguishedFires * perFirePercent;
@@ -250,11 +271,15 @@ public class GameManager : MonoBehaviour
         if (winFiresText != null)
             winFiresText.text = $"Fires Extinguished: {extinguishedFires}/{activatedFires.Count}";
         if (winTimeText != null)
-            winTimeText.text = $"Exit Bonus: {exitBonusPercent:F0}%";
+            winTimeText.text = $"Exit Bonus: {exitBonusPercent:F0}% | Time: {FormatTime(timeTaken)}";
         if (winFinalScoreText != null)
             winFinalScoreText.text = $"Completion: {totalPercent:F0}%";
 
-        if (winCanvas != null) winCanvas.SetActive(true);
+
+        if (winCanvas != null)
+        {
+            winCanvas.SetActive(true);
+        }
 
         Time.timeScale = 0f;
     }
@@ -270,13 +295,21 @@ public class GameManager : MonoBehaviour
         if (hudFiresText != null) hudFiresText.text = $"{extinguishedFires}/{activatedFires.Count} Fires";
     }
 
-    // ========== Buttons ==========
-    public void RestartGame()
+    public bool IsMissionComplete()
     {
-        Debug.Log("GameManager: Restarting game...");
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        return extinguishedFires >= activatedFires.Count && activatedFires.Count > 0;
     }
+
+    // ========== Buttons ==========
+    //public void RestartGame()
+    //{
+    //    Time.timeScale = 1f;
+    //    gameEnded = false;
+    //    playerExited = false;
+    //    Instance = null;
+    //    Debug.Log("GameManager: Restarting game...");
+    //    UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    //}
 
     public void ExitGame()
     {

@@ -9,20 +9,34 @@ public class ExitTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+
+        Debug.Log(">>> TRIGGER HIT BY: " + other.name);
+
+        // 1. Check if it's the player
+        if (other.CompareTag("Player") || other.CompareTag("MainCamera"))
         {
-            GameManager.Instance.PlayerExited();
+            Debug.Log(">>> PLAYER DETECTED!");
 
-            // Change background music
-            if (backgroundAudioSource != null && newBackgroundClip != null)
+            // 2. Add this specific check for the GameManager data
+            if (GameManager.Instance != null && GameManager.Instance.IsMissionComplete())
             {
-                backgroundAudioSource.clip = newBackgroundClip;
-                backgroundAudioSource.Play();
+                // This line triggers the Win UI
+                GameManager.Instance.PlayerExited();
+
+                if (backgroundAudioSource != null && newBackgroundClip != null)
+                {
+                    backgroundAudioSource.clip = newBackgroundClip;
+                    backgroundAudioSource.Play();
+                }
+
+                alarmSound.Stop();
+                Destroy(ExitCylinder);
             }
-
-            alarmSound.Stop();
-
-            Destroy(ExitCylinder);
+            else
+            {
+                // If the UI says 0/2 or 1/2, this message will appear in your Console
+                Debug.Log("Mission not complete yet!");
+            }
         }
     }
 }

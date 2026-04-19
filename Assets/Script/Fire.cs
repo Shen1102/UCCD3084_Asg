@@ -35,14 +35,7 @@ public class Fire : MonoBehaviour
     {
         yield return null;
         if (GameManager.Instance != null)
-        {
-            Debug.Log($"Registering {gameObject.name} with GameManager.");
             GameManager.Instance.RegisterActivatedFire(this);
-        }
-        else
-        {
-            Debug.LogError("GameManager.Instance is NULL! Fire cannot be recognized.");
-        }
     }
 
     private void Start()

@@ -7,7 +7,7 @@
             "actions": [
                 {
                     "name": "Position",
-                    "type": "Value",
+                    "type": "PassThrough",
                     "id": "1a9029f8-7a46-46b9-9eff-e9ae8365f611",
                     "expectedControlType": "Vector3",
                     "processors": "",
@@ -16,7 +16,7 @@
                 },
                 {
                     "name": "Rotation",
-                    "type": "Value",
+                    "type": "PassThrough",
                     "id": "aed87fe6-2b01-4dd2-a8fa-195578fd8158",
                     "expectedControlType": "Quaternion",
                     "processors": "",
